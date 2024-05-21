@@ -6,6 +6,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useGoogleLogin } from "@react-oauth/google";
 import { IoLogoGoogle } from "react-icons/io";
+import axios from "axios";
 
 interface ISignInForm {
   email: string;
@@ -13,16 +14,29 @@ interface ISignInForm {
 }
 
 const SignIn = () => {
+  const { register, handleSubmit } = useForm<ISignInForm>();
+  const onSubmit: SubmitHandler<ISignInForm> = (data: ISignInForm) =>
+    console.log(data);
+
   const loginwithGoogle = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      console.log(tokenResponse);
+      const accessToken = tokenResponse.access_token;
+      sendToken(accessToken);
     },
     onError: () => console.log("Login Failed"),
   });
 
-  const { register, handleSubmit } = useForm<ISignInForm>();
-  const onSubmit: SubmitHandler<ISignInForm> = (data: ISignInForm) =>
-    console.log(data);
+  const sendToken = async (accessToken: string) => {
+    try {
+      const result = await axios.post(
+        "http://localhost:3000/api/auth/signin-google",
+        { accessToken: accessToken }
+      );
+      console.log("User data", result);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <section className="h-screen w-auto flex items-center justify-center p-4">
