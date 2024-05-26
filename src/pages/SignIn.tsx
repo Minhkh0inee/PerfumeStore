@@ -4,37 +4,52 @@ import loginImgLarge from "../assets/images/login-image-large.png";
 import { Input } from "@/components/ui/input";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { useGoogleLogin } from "@react-oauth/google";
-import { IoLogoGoogle } from "react-icons/io";
-import axios from "axios";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import { signIn, signInWithGoogle } from "@/util/api/authenticationApi";
 
 interface ISignInForm {
   email: string;
   password: string;
 }
 
+interface IData {
+  status: number | undefined;
+  message: string;
+  success: boolean;
+}
+
 const SignIn = () => {
-  const { register, handleSubmit } = useForm<ISignInForm>();
-  const onSubmit: SubmitHandler<ISignInForm> = (data: ISignInForm) =>
-    console.log(data);
-
-  const loginwithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      const accessToken = tokenResponse.access_token;
-      sendToken(accessToken);
-    },
-    onError: () => console.log("Login Failed"),
-  });
-
-  const sendToken = async (accessToken: string) => {
+  const navigate = useNavigate();
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<ISignInForm>();
+  const onSubmit: SubmitHandler<ISignInForm> = async (data: ISignInForm) => {
     try {
-      const result = await axios.post(
-        "http://localhost:3000/api/auth/signin-google",
-        { accessToken: accessToken }
-      );
-      console.log("User data", result);
+      const result = await signIn(data);
+      console.log("Result: ", result);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const sendToken = async (accessToken: string | undefined) => {
+    try {
+      const result = await signInWithGoogle(accessToken);
+      if (result !== undefined) {
+        const { message, success } = result.data;
+        redirect({ status: result?.status, message, success });
+      }
     } catch (e) {
       console.log(e);
+    }
+  };
+
+  const redirect = (data: IData) => {
+    if (data.status === 200) {
+      navigate("/home");
     }
   };
 
@@ -60,7 +75,6 @@ const SignIn = () => {
               exclusive fragrances.
             </p>
           </div>
-
           {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -72,10 +86,16 @@ const SignIn = () => {
               </Label>
               <Input
                 {...register("email", { required: true })}
+                aria-invalid={errors.email ? "true" : "false"}
                 type="email"
                 id="email"
                 placeholder="Email"
               />
+              {errors.email?.type === "required" && (
+                <p role="alert" className="text-red-500 text-sm">
+                  First name is required
+                </p>
+              )}
             </div>
 
             <div className="grid w-full montserrat-regular max-w-sm items-center gap-1.5">
@@ -84,17 +104,23 @@ const SignIn = () => {
               </Label>
               <Input
                 {...register("password", { required: true })}
+                aria-invalid={errors.password ? "true" : "false"}
                 type="password"
                 id="password"
                 placeholder="Password"
               />
+
+              {errors.password?.type === "required" && (
+                <p role="alert" className="text-red-500 text-sm">
+                  Password is required
+                </p>
+              )}
             </div>
             <div className="w-full text-sm text-right montserrat-regular my-2 text-blue-400">
               Forgot password?
             </div>
             <Button type="submit">Sign In</Button>
           </form>
-
           {/* divider */}
           <div className="flex flex-row items-center justify-center gap-x-2 my-3">
             <div className="bg-gray-300 h-[0.5px] w-1/3"></div>
@@ -107,19 +133,17 @@ const SignIn = () => {
             </div>
             <div className="bg-gray-300 h-[0.5px] w-1/3"></div>
           </div>
-
           {/* Google Login */}
-          <div className="w-full">
-            <Button
-              onClick={() => loginwithGoogle()}
-              type="submit"
-              className="w-full flex flex-row items-center justify-center gap-x-2 bg-white text-blue-500 border-blue-500 border-2 hover:bg-blue-500 hover:text-white"
-            >
-              <span className="montserrat-regular">Sign in with Google</span>
-              <IoLogoGoogle />
-            </Button>
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                sendToken(credentialResponse.credential);
+              }}
+              onError={() => {
+                console.log("Login Failed");
+              }}
+            />
           </div>
-
           {/* Sign Up title */}
           <div className="montserrat-regular w-full text-sm justify-center text-center flex flex-row gap-x-1 mt-5">
             <span>Don't you have an account?</span>
