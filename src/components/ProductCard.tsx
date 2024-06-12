@@ -1,9 +1,19 @@
 import { ShoppingCart } from "lucide-react";
 import productImg from "../assets/images/product.jpg";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = () => {
+  const navigate = useNavigate();
+
+  const redirectToDetail = () => {
+    navigate("/perfumes/1");
+  };
+
   return (
-    <div className="flex flex-col gap-y-3 w-44">
+    <div
+      onClick={redirectToDetail}
+      className="flex flex-col gap-y-3 w-48 md:w-56 lg:w-72 p-2 cursor-pointer hover:shadow-md rounded-sm ease-in-out duration-300"
+    >
       <div className="w-full h-40">
         <img
           src={productImg}

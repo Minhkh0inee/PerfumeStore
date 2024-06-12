@@ -6,6 +6,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import SignIn from "./pages/SignIn.tsx";
 import Home from "./pages/Home";
 import Layout from "./layout/Layout.tsx";
+import PerfumeList from "./pages/PerfumeList.tsx";
+import PerfumeDetail from "./pages/PerfumeDetail.tsx";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +20,14 @@ const router = createBrowserRouter([
       {
         path: "/signin",
         element: <SignIn />,
+      },
+      {
+        path: "/perfumes",
+        element: <PerfumeList />,
+      },
+      {
+        path: "/perfumes/:id",
+        element: <PerfumeDetail />,
       },
     ],
   },
